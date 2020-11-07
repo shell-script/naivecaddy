@@ -82,7 +82,7 @@ function check_status(){
 
 function print_menu(){
 	echo -e "NaiveCaddy Install Status: ${INSTALL_STATUS}
-NaiveCaddy Running Status：${RUNNING_STATUS}
+NaiveCaddy Running Status: ${RUNNING_STATUS}
 ----------------------------------------
 	1. Install NaiveCaddy
 	2. Remove NaiveCaddy
@@ -158,7 +158,7 @@ function install_naivecaddy() {
 					systemctl stop nginx
 					systemctl disable nginx
 				fi
-				lsof -i:"$i" | awk '{print $2}'| grep -v "PID" | xargs kill -9
+				lsof -i:"$i" | awk '{print $2}' | grep -v "PID" | xargs kill -9
 				__info_msg "Waiting for 5s ..."
 				sleep 5s
 				if lsof -i:"$i" > "/dev/null"; then
