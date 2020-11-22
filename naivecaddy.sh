@@ -63,20 +63,17 @@ function check_status(){
 		if [ -z "${CADDY_PID}" ]; then
 			RUNNING_STATUS="${RED_COLOR}Not Running${DEFAULT_COLOR}"
 			NAIVE_INFO="${RED_COLOR}Not Running${DEFAULT_COLOR}"
-			NAIVE_LINK="${RED_COLOR}Not Running${DEFAULT_COLOR}"
 		else
 			RUNNING_STATUS="${GREEN_COLOR}Running${DEFAULT_COLOR} | ${GREEN_COLOR}${CADDY_PID}${DEFAULT_COLOR}"
-			NAIVE_DOMAIN="$(head -n1 "${CADDY_DIR}/${CADDY_CONF}")"
+			NAIVE_DOMAIN="$(head -n1 "${CADDY_DIR}/${CADDY_CONF}" | sed "s/:443, //g")"
 			NAIVE_USER="$(grep "basic_auth" "${CADDY_DIR}/${CADDY_CONF}" | awk -F ' ' '{print $2}')"
 			NAIVE_PASS="$(grep "basic_auth" "${CADDY_DIR}/${CADDY_CONF}" | awk -F ' ' '{print $3}')"
 			NAIVE_INFO="${GREEN_BACK}${NAIVE_USER}:${NAIVE_PASS}@${NAIVE_DOMAIN}:443${DEFAULT_COLOR}"
-			NAIVE_LINK="${GREEN_BACK}naive://$(echo -n "${NAIVE_USER}:${NAIVE_PASS}@${NAIVE_DOMAIN}:443" | base64)${DEFAULT_COLOR}"
 		fi
 	else
 		INSTALL_STATUS="${RED_COLOR}Not Installed${DEFAULT_COLOR}"
 		RUNNING_STATUS="${RED_COLOR}Not Installed${DEFAULT_COLOR}"
 		NAIVE_INFO="${RED_COLOR}Not Installed${DEFAULT_COLOR}"
-		NAIVE_LINK="${RED_COLOR}Not Installed${DEFAULT_COLOR}"
 	fi
 }
 
@@ -91,7 +88,6 @@ NaiveCaddy Running Status: ${RUNNING_STATUS}
 	4. Restart NaiveCaddy
 ----------------------------------------
 NaiveInfo: ${NAIVE_INFO}
-NaiveLink: ${NAIVE_LINK}
 ----------------------------------------"
 	read -e -r -p "Action [1-4]: " DO_ACTION
 	case "${DO_ACTION}" in
@@ -174,13 +170,13 @@ function install_naivecaddy() {
 
 	__info_msg "Please provide the following info: "
 	read -e -r -p "Domain (e.g. example.com): " CONF_DOMAIN
-	[ -z "${CONF_DOMAIN}" ] && { __error_msg "Domain cannot be empty!"; exit 1; }
+	[ -z "${CONF_DOMAIN}" ] && { __error_msg "Domain cannot be empty."; exit 1; }
 	read -e -r -p "E-mail (e.g. naive@example.com): " CONF_EMAIL
-	[ -z "${CONF_EMAIL}" ] && { __error_msg "E-mail cannot be empty!"; exit 1; }
+	[ -z "${CONF_EMAIL}" ] && { __error_msg "E-mail cannot be empty."; exit 1; }
 	read -e -r -p "Username (e.g. user): " CONF_USER
-	[ -z "${CONF_USER}" ] && { __error_msg "Username cannot be empty!"; exit 1; }
+	[ -z "${CONF_USER}" ] && { __error_msg "Username cannot be empty."; exit 1; }
 	read -e -r -p "Password (e.g. pass): " CONF_PASS
-	[ -z "${CONF_PASS}" ] && { __error_msg "Password cannot be empty!"; exit 1; }
+	[ -z "${CONF_PASS}" ] && { __error_msg "Password cannot be empty."; exit 1; }
 
 	__info_msg "Installing dependencies ..."
 	if [ "${SYSTEM_OS}" == "RHEL" ]; then
@@ -208,13 +204,12 @@ function install_naivecaddy() {
 		__info_msg "Downloading Go 1.14 ..."
 
 		GO_LATEST_VER="$(curl -sL --retry "5" --retry-delay "3" "https://github.com/golang/go/releases" | grep -Eo "go1\.14\.[0-9]+" | sed -n "1p")"
-		GO_LATEST_VER="${GO_LATEST_VER:-go1.14.10}"
-		curl --retry "5" --retry-delay "3" -L "https://golang.org/dl/${GO_LATEST_VER}.linux-${SYSTEM_ARCH}.tar.gz" -o "golang.${GO_LATEST_VER}.tar.gz"
+		curl --retry "5" --retry-delay "3" --location "https://golang.org/dl/${GO_LATEST_VER}.linux-${SYSTEM_ARCH}.tar.gz" --output "golang.${GO_LATEST_VER}.tar.gz"
 		tar -zxf "golang.${GO_LATEST_VER}.tar.gz"
 		rm -f "golang.${GO_LATEST_VER}.tar.gz"
 		[ ! -f "./go/bin/go" ] && { __error_msg "Failed to download go binary."; popd; rm -rf "${INSTALL_TEMP_DIR}"; exit 1; }
 
-		PATH="$PWD/go/bin:$PATH"
+		export PATH="$PWD/go/bin:$PATH"
 		export GOROOT="$PWD/go"
 		export GOTOOLDIR="$PWD/go/pkg/tool/linux_amd64"
 	}
@@ -226,7 +221,7 @@ function install_naivecaddy() {
 
 	__info_msg "Fetching Caddy builder ..."
 	go get -u "github.com/caddyserver/xcaddy/cmd/xcaddy"
-	__info_msg "Building NaiveCaddy (this may take a few minutes to finish) ..."
+	__info_msg "Building NaiveCaddy (this may take a few minutes to be completed) ..."
 	"${GOBIN}/xcaddy" build --with "github.com/caddyserver/forwardproxy@caddy2=github.com/klzgrad/forwardproxy@naive"
 
 	if [ -n "$(./caddy version)" ]; then
