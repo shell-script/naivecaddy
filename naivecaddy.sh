@@ -200,10 +200,10 @@ function install_naivecaddy() {
 	pushd "${INSTALL_TEMP_DIR}" || { __error_msg "Failed to enter tmp directory."; exit 1; }
 
 	__info_msg "Checking go version ..."
-	go version 2>"/dev/null" | grep -q "go1.14" || {
-		__info_msg "Downloading Go 1.14 ..."
+	go version 2>"/dev/null" | grep -q "go1.15" || {
+		__info_msg "Downloading Go 1.15 ..."
 
-		GO_LATEST_VER="$(curl -sL --retry "5" --retry-delay "3" "https://github.com/golang/go/releases" | grep -Eo "go1\.14\.[0-9]+" | sed -n "1p")"
+		GO_LATEST_VER="$(curl -sL --retry "5" --retry-delay "3" "https://github.com/golang/go/releases" | grep -Eo "go1\.15\.[0-9]+" | sed -n "1p")"
 		curl --retry "5" --retry-delay "3" --location "https://golang.org/dl/${GO_LATEST_VER}.linux-${SYSTEM_ARCH}.tar.gz" --output "golang.${GO_LATEST_VER}.tar.gz"
 		tar -zxf "golang.${GO_LATEST_VER}.tar.gz"
 		rm -f "golang.${GO_LATEST_VER}.tar.gz"
@@ -303,13 +303,19 @@ WantedBy=multi-user.target
 
 	__info_msg "Setting firewall rules ..."
 	if [ "${SYSTEM_OS}" == "RHEL" ]; then
-		firewall-cmd --permanent --zone=public --add-port=80/tcp
-		firewall-cmd --permanent --zone=public --add-port=443/tcp
-		firewall-cmd --reload
+		for i in {80,443}
+		do
+			firewall-cmd --permanent --zone=public --add-port="$i"/tcp
+			firewall-cmd --permanent --zone=public --add-port="$i"/udp
+			firewall-cmd --reload
+		done
 	else
-		ufw allow 80/tcp
-		ufw allow 443/tcp
-		ufw reload
+		for i in {80,443}
+		do
+			ufw allow "$i"/tcp
+			ufw allow "$i"/udp
+			ufw reload
+		done
 	fi
 
 	__info_msg "Starting NaiveCaddy ..."
@@ -321,7 +327,6 @@ WantedBy=multi-user.target
 	echo -e "\n\n"
 	__success_msg "Installation is finished, see connection info below:"
 	echo -e "${GREEN_BACK}${CONF_USER}:${CONF_PASS}@${CONF_DOMAIN}:443${DEFAULT_COLOR}"
-	echo -e "${GREEN_BACK}naive://$(echo -n "${CONF_USER}:${CONF_PASS}@${CONF_DOMAIN}:443" | base64)${DEFAULT_COLOR}"
 }
 
 function remove_naivecaddy() {
@@ -341,13 +346,19 @@ function remove_naivecaddy() {
 
 			__info_msg "Setting firewall rules ..."
 			if [ "${SYSTEM_OS}" == "RHEL" ]; then
-				firewall-cmd --permanent --zone=public --remove-port=80/tcp
-				firewall-cmd --permanent --zone=public --remove-port=443/tcp
-				firewall-cmd --reload
+				for i in {80,443}
+				do
+					firewall-cmd --permanent --zone=public --remove-port="$i"/tcp
+					firewall-cmd --permanent --zone=public --remove-port="$i"/udp
+					firewall-cmd --reload
+				done
 			else
-				ufw delete allow 80/tcp
-				ufw delete allow 443/tcp
-				ufw reload
+				for i in {80,443}
+				do
+					ufw delete allow "$i"/tcp
+					ufw delete allow "$i"/udp
+					ufw reload
+				done
 			fi
 
 			__success_msg "NaiveCaddy is removed."
