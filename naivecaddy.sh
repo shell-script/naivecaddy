@@ -200,8 +200,8 @@ function install_naivecaddy() {
 	pushd "${INSTALL_TEMP_DIR}" || { __error_msg "Failed to enter tmp directory."; exit 1; }
 
 	__info_msg "Checking go version ..."
-	go version 2>"/dev/null" | grep -q "go1.15" || {
-		__info_msg "Downloading Go 1.15 ..."
+	go version 2>"/dev/null" | grep -q "go1.16" || {
+		__info_msg "Downloading Go 1.16 ..."
 
 		GO_LATEST_VER="$(curl -sL --retry "5" --retry-delay "3" "https://github.com/golang/go/tags" | grep -Eo "go1\.16\.[0-9]+" | sed -n "1p" || echo "go1.16.12")"
 		curl --retry "5" --retry-delay "3" --location "https://golang.org/dl/${GO_LATEST_VER}.linux-${SYSTEM_ARCH}.tar.gz" --output "golang.${GO_LATEST_VER}.tar.gz"
