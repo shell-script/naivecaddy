@@ -126,6 +126,24 @@ function install_naivecaddy() {
 		esac
 	}
 
+	__info_msg "Installing dependencies ..."
+	if [ "${SYSTEM_OS}" == "RHEL" ]; then
+		yum update -y
+		yum install -y epel-release
+		yum install -y ca-certificates curl firewalld git lsof
+		firewall-cmd --permanent --zone=public --add-port=22/tcp
+		systemctl start firewalld
+		firewall-cmd --reload
+	else
+		apt update -y
+		apt install -y ca-certificates curl git lsof ufw
+		ufw allow 22/tcp
+		ufw enable <<-EOF
+			y
+		EOF
+		ufw reload
+	fi
+
 	__info_msg "Checking port ..."
 	for i in {80,443}
 	do
@@ -178,24 +196,6 @@ function install_naivecaddy() {
 	read -e -r -p "Password (e.g. pass): " CONF_PASS
 	[ -z "${CONF_PASS}" ] && { __error_msg "Password cannot be empty."; exit 1; }
 
-	__info_msg "Installing dependencies ..."
-	if [ "${SYSTEM_OS}" == "RHEL" ]; then
-		yum update -y
-		yum install -y epel-release
-		yum install -y ca-certificates curl firewalld git lsof
-		firewall-cmd --permanent --zone=public --add-port=22/tcp
-		systemctl start firewalld
-		firewall-cmd --reload
-	else
-		apt update -y
-		apt install -y ca-certificates curl git lsof ufw
-		ufw allow 22/tcp
-		ufw enable <<-EOF
-			y
-		EOF
-		ufw reload
-	fi
-
 	INSTALL_TEMP_DIR="$(mktemp -p "/tmp" -d "naive.XXXXXX")"
 	pushd "${INSTALL_TEMP_DIR}" || { __error_msg "Failed to enter tmp directory."; exit 1; }
 
@@ -203,7 +203,7 @@ function install_naivecaddy() {
 	go version 2>"/dev/null" | grep -q "go1.15" || {
 		__info_msg "Downloading Go 1.15 ..."
 
-		GO_LATEST_VER="$(curl -sL --retry "5" --retry-delay "3" "https://github.com/golang/go/tags" | grep -Eo "go1\.15\.[0-9]+" | sed -n "1p")"
+		GO_LATEST_VER="$(curl -sL --retry "5" --retry-delay "3" "https://github.com/golang/go/tags" | grep -Eo "go1\.16\.[0-9]+" | sed -n "1p" || echo "go1.16.12")"
 		curl --retry "5" --retry-delay "3" --location "https://golang.org/dl/${GO_LATEST_VER}.linux-${SYSTEM_ARCH}.tar.gz" --output "golang.${GO_LATEST_VER}.tar.gz"
 		tar -zxf "golang.${GO_LATEST_VER}.tar.gz"
 		rm -f "golang.${GO_LATEST_VER}.tar.gz"
@@ -211,7 +211,7 @@ function install_naivecaddy() {
 
 		export PATH="$PWD/go/bin:$PATH"
 		export GOROOT="$PWD/go"
-		export GOTOOLDIR="$PWD/go/pkg/tool/linux_amd64"
+		export GOTOOLDIR="$PWD/go/pkg/tool/linux_$SYSTEM_ARCH"
 	}
 
 	export GOBIN="$PWD/gopath/bin"
