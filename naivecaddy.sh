@@ -220,9 +220,9 @@ function install_naivecaddy() {
 	export GOMODCACHE="$GOPATH/pkg/mod"
 
 	__info_msg "Fetching Caddy builder ..."
-	go get -u "github.com/caddyserver/xcaddy/cmd/xcaddy"
+	go install "github.com/caddyserver/xcaddy/cmd/xcaddy@latest"
 	__info_msg "Building NaiveCaddy (this may take a few minutes to be completed) ..."
-	"${GOBIN}/xcaddy" build --with "github.com/caddyserver/forwardproxy@caddy2=github.com/sagernet/forwardproxy@naive"
+	"${GOBIN}/xcaddy" build --with "github.com/caddyserver/forwardproxy@caddy2=github.com/sagernet/forwardproxy@latest"
 
 	if [ -n "$(./caddy version)" ]; then
 		__success_msg "NaiveCaddy version: $(./caddy version)"
