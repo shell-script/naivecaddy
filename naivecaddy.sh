@@ -267,7 +267,10 @@ function install_naivecaddy() {
 			hide_via
 			probe_resistance
 		}
-		file_server { root $PWD/wwwhtml }
+
+		file_server {
+			root $PWD/wwwhtml
+		}
 	}
 }" > "${CADDY_CONF}"
 
