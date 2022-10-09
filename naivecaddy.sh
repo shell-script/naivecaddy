@@ -59,9 +59,9 @@ function base_check() {
 
 	if [ -e "/etc/redhat-release" ]; then
 		SYSTEM_OS="RHEL"
-	else grep -q "Debian" "/etc/issue"; then
+	elif grep -q "Debian" "/etc/issue"; then
 		SYSTEM_OS="DEBIAN"
-	else grep -q "Ubuntu" "/etc/issue"; then
+	elif grep -q "Ubuntu" "/etc/issue"; then
 		SYSTEM_OS="UBUNTU"
 	else
 		__error_msg "Your OS is not supported."
