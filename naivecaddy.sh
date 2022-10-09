@@ -40,18 +40,33 @@ function base_check() {
 	[ "${EUID}" -ne "0" ] && { __error_msg "You must run me with ROOT access."; exit 1; }
 
 	[ "$(uname)" != "Linux" ] && { __error_msg "Your OS $(uname) is NOT SUPPORTED."; exit 1; }
-	if [[ "aarch64 armv6l i686 x86_64" =~ (^|[[:space:]])"$(uname -m)"($|[[:space:]]) ]]; then
+
+	case "$(uname -m)" in
+	"armv6l"|"i686")
 		SYSTEM_ARCH="$(uname -m)"
-		SYSTEM_ARCH="${SYSTEM_ARCH/x86_64/amd64}"
-	else
+		;;
+	"aarch64")
+		SYSTEM_ARCH="arm64"
+		;;
+	"x86_64")
+		SYSTEM_ARCH="amd64"
+		;;
+	*)
 		__error_msg "Your architecture $(uname -m) is NOT SUPPORTED."
 		exit 1
-	fi
+		;;
+	esac
 
-	[ -e "/etc/redhat-release" ] && SYSTEM_OS="RHEL"
-	grep -q "Debian" "/etc/issue" && SYSTEM_OS="DEBIAN"
-	grep -q "Ubuntu" "/etc/issue" && SYSTEM_OS="UBUNTU"
-	[ -z "${SYSTEM_OS}" ] && { __error_msg "Your OS is not supported."; exit 1; }
+	if [ -e "/etc/redhat-release" ]; then
+		SYSTEM_OS="RHEL"
+	else grep -q "Debian" "/etc/issue"; then
+		SYSTEM_OS="DEBIAN"
+	else grep -q "Ubuntu" "/etc/issue"; then
+		SYSTEM_OS="UBUNTU"
+	else
+		__error_msg "Your OS is not supported."
+		exit 1
+	fi
 
 	command -v "systemctl" > "/dev/null" || { __error_msg "Systemd is NOT FOUND."; exit 1; }
 }
