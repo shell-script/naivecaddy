@@ -1,8 +1,5 @@
 #! /bin/bash
-# [CTCGFW]Shell-Scripts
-# Use it under GPLv3.
-# --------------------------------------------------------
-# NaiveCaddy Installer
+# SPDX-License-Identifier: GPL-3.0-only
 
 # Color definition
 DEFAULT_COLOR="\033[0m"
