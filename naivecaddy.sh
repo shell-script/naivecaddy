@@ -218,7 +218,8 @@ function install_naivecaddy() {
 	go version 2>"/dev/null" | grep -q "go1.18" || {
 		__info_msg "Downloading Go 1.18 ..."
 
-		GO_LATEST_VER="$(curl -sL --retry "5" --retry-delay "3" "https://github.com/golang/go/tags" | grep -Eo "go1\.18\.[0-9]+" | sed -n "1p" || echo "go1.18.2")"
+		# GO_LATEST_VER="$(curl -sL --retry "5" --retry-delay "3" "https://github.com/golang/go/tags" | grep -Eo "go1\.18\.[0-9]+" | sed -n "1p" || echo "go1.18.2")"
+		GO_LATEST_VER="go1.18.10"
 		curl --retry "5" --retry-delay "3" --location "https://golang.org/dl/${GO_LATEST_VER}.linux-${SYSTEM_ARCH}.tar.gz" --output "golang.${GO_LATEST_VER}.tar.gz"
 		tar -zxf "golang.${GO_LATEST_VER}.tar.gz"
 		rm -f "golang.${GO_LATEST_VER}.tar.gz"
@@ -237,7 +238,7 @@ function install_naivecaddy() {
 	__info_msg "Fetching Caddy builder ..."
 	go install "github.com/caddyserver/xcaddy/cmd/xcaddy@latest"
 	__info_msg "Building NaiveCaddy (this may take a few minutes to be completed) ..."
-	"${GOBIN}/xcaddy" build --with "github.com/caddyserver/forwardproxy@caddy2=github.com/sagernet/forwardproxy@latest"
+	"${GOBIN}/xcaddy" build --with "github.com/caddyserver/forwardproxy@caddy2=github.com/klzgrad/forwardproxy@naive"
 
 	if [ -n "$(./caddy version)" ]; then
 		__success_msg "NaiveCaddy version: $(./caddy version)"
